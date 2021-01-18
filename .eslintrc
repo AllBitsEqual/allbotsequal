@@ -1,0 +1,32 @@
+{
+  "extends": [
+    "airbnb-base",
+    "prettier",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": ["prettier"],
+  "rules": {
+    "func-names": 0,
+    "import/extensions": ["error", "never"],
+    "import/no-unresolved": 0,
+    "import/prefer-default-export": 0,
+    "jsx-a11y/accessible-emoji": 0,
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "trailingComma": "all",
+        "arrowParens": "avoid",
+        "endOfLine": "auto"
+      }
+    ],
+    "semi": ["error", "never"],
+    "no-plusplus": ["error", {"allowForLoopAfterthoughts": true}],
+    "no-shadow": ["error"],
+    "no-use-before-define": ["error", {
+      "functions": true,
+      "classes": true,
+      "variables": false
+    }],
+  }
+}

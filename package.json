@@ -1,0 +1,30 @@
+{
+  "name": "allbotsequal",
+  "version": "0.0.1",
+  "description": "One Bot to rule them all ... AllBotsEqual will take over menial task on my server AllBitsEqual and automate simple tasks.",
+  "author": "Konrad Abe (AllBitsEqual)",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./ || true",
+    "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./ || true",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0",
+    "lodash": "^4.17.19"
+  },
+  "optionalDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.2.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.3.0",
+    "prettier": "^2.2.1"
+  }
+}
