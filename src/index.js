@@ -32,18 +32,22 @@ bot.on('message', message => {
 
     // user info, either call with valid user name or default to info about message author
     if (message.content.startsWith(`${prefix}whois`)) {
-        // if the message contains a mention, pick the first as the target
+        // if the message contains any mentions, pick the first as the target
         if (message.mentions.users.size) {
             const taggedUser = message.mentions.users.first()
-            const createdString = `${taggedUser.createdAt.toLocaleDateString()} - ${taggedUser.createdAt.toLocaleTimeString()}`
             message.channel.send(
-                `User Info: ${taggedUser.username}  (account created: ${createdString})`,
+                `User Info: ${
+                    taggedUser.username
+                } (account created: ${taggedUser.createdAt.toUTCString()})`,
             )
         } else {
             // default to sender if no user is mentioned
             const { author } = message
-            const createdString = `${author.createdAt.toLocaleDateString()} - ${author.createdAt.toLocaleTimeString()}`
-            message.reply(`User Self Info: ${author.username} (account created: ${createdString})`)
+            message.reply(
+                `User Self Info: ${
+                    author.username
+                } (account created: ${author.createdAt.toUTCString()})`,
+            )
         }
     }
 })
