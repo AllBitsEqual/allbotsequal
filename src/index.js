@@ -1,14 +1,16 @@
 require('dotenv').config()
 const discord = require('discord.js')
 const config = require('../config.json')
+const botCommands = require('./commands')
 
 const { TOKEN } = process.env
-const { prefix, name } = config
+const { prefix } = config
 
 // Define the bot
 const bot = {
     client: new discord.Client(),
     log: console.log, // eslint-disable-line no-console
+    commands: new discord.Collection(),
 }
 
 /*
@@ -17,6 +19,10 @@ const bot = {
 
 // Load the bot
 bot.load = function load() {
+    this.log('Loading commands...')
+    Object.keys(botCommands).forEach(key => {
+        this.commands.set(botCommands[key].name, botCommands[key])
+    })
     this.log('Connecting...')
     this.client.login(TOKEN)
 }
@@ -28,41 +34,20 @@ bot.onConnect = async function onConnect() {
 
 // Check and react to messages
 bot.onMessage = async function onMessage(message) {
-    // ping command without a prefix (exact match)
-    if (message.content === 'ping') {
-        const delay = Date.now() - message.createdAt
-        message.reply(`**pong** *(delay: ${delay}ms)*`)
-        return
-    }
-
     // ignore all other messages without our prefix
     if (!message.content.startsWith(prefix)) return
 
-    // let the bot introduce itself (exact match)
-    if (message.content === `${prefix}who`) {
-        message.channel.send(`My name is ${name} and I was created to serve!`)
-        return
-    }
+    const args = message.content.split(/ +/)
+    // get the first word (lowercase) and remove the prefix
+    const command = args.shift().toLowerCase().slice(prefix.length)
 
-    // user info, either call with valid user name or default to info about message author
-    if (message.content.startsWith(`${prefix}whois`)) {
-        // if the message contains any mentions, pick the first as the target
-        if (message.mentions.users.size) {
-            const taggedUser = message.mentions.users.first()
-            message.channel.send(
-                `User Info: ${
-                    taggedUser.username
-                } (account created: ${taggedUser.createdAt.toUTCString()})`,
-            )
-        } else {
-            // default to sender if no user is mentioned
-            const { author } = message
-            message.reply(
-                `User Self Info: ${
-                    author.username
-                } (account created: ${author.createdAt.toUTCString()})`,
-            )
-        }
+    if (!this.commands.has(command)) return
+
+    try {
+        this.commands.get(command).execute(message, args)
+    } catch (error) {
+        this.log(error)
+        message.reply('there was an error trying to execute that command!')
     }
 }
 
