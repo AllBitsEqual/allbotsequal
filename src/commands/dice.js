@@ -3,14 +3,14 @@ const discord = require('discord.js')
 const getDiceResult = args => {
     // get the param or default to "1d6"
     const [diceParam = '1d6', ...rest] = args
-    // split rolls and sides when applicable
+    // split rolls and sides when applicable with fallback
     const [rolls = 1, sides = 6] = diceParam.split('d')
 
-    // check if rolls and dice are integer
+    // check if rolls and sides are integer
     const intRolls = Number.isNaN(parseInt(rolls, 10)) ? 1 : parseInt(rolls, 10)
     const intSides = Number.isNaN(parseInt(sides, 10)) ? 6 : parseInt(sides, 10)
 
-    // check if rolls and dice are within predefined rules
+    // check if rolls and sides are within predefined rules
     const safeRolls = intRolls >= 1 && intRolls <= 10 ? intRolls : 1
     const safeSides = [2, 3, 4, 6, 8, 10, 12, 20, 100].includes(intSides) ? intSides : 6
 
@@ -45,7 +45,9 @@ module.exports = {
         `one argument for a number of dice between 1 and 10 or with 2 arguments ` +
         `to define the dices' sides. (2, 3, 4, 6, 8, 10, 12, 20, 100)`,
     async execute(message, args, bot) {
+        // run user input through dice function to get formatted results and feedback
         const { type, title, fieldName, fieldContent, rest } = getDiceResult(args)
+        // create the embedded message
         const embed = new discord.MessageEmbed()
             .setTitle(title) // The title of the discord embedded message
             .setColor(bot.config.defaultColors[type]) // either "success" or "error"
