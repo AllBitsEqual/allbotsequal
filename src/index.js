@@ -4,13 +4,25 @@ const config = require('../config.json')
 const botCommands = require('./commands')
 
 const { TOKEN } = process.env
-const { prefix } = config
+const { prefix, name } = config
+
+// Config
+const configSchema = {
+    name,
+    defaultColors: {
+        success: '#41b95f',
+        neutral: '#287db4',
+        warning: '#ff7100',
+        error: '#c63737',
+    },
+}
 
 // Define the bot
 const bot = {
     client: new discord.Client(),
     log: console.log, // eslint-disable-line no-console
     commands: new discord.Collection(),
+    config: configSchema,
 }
 
 /*
@@ -44,7 +56,7 @@ bot.onMessage = async function onMessage(message) {
     if (!this.commands.has(command)) return
 
     try {
-        this.commands.get(command).execute(message, args)
+        this.commands.get(command).execute(message, args, bot)
     } catch (error) {
         this.log(error)
         message.reply('there was an error trying to execute that command!')
