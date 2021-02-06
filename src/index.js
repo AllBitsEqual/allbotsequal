@@ -1,14 +1,8 @@
-require('dotenv').config()
 const discord = require('discord.js')
-const config = require('../config.json')
 const botCommands = require('./commands')
-
-const { TOKEN } = process.env
-const { prefix, name } = config
 
 // Config
 const configSchema = {
-    name,
     defaultColors: {
         success: '#41b95f',
         neutral: '#287db4',
@@ -17,12 +11,12 @@ const configSchema = {
     },
 }
 
+const createBot = initialConfig => {
 // Define the bot
 const bot = {
     client: new discord.Client(),
     log: console.log, // eslint-disable-line no-console
     commands: new discord.Collection(),
-    config: configSchema,
 }
 
 /*
@@ -79,5 +73,13 @@ bot.client.on('disconnect', evt => {
 })
 bot.client.on('message', bot.onMessage.bind(bot))
 
-// start the bot
-bot.load()
+return {
+    start: () => {
+        return bot.load(initialConfig)
+    },
+}
+}
+
+module.exports = {
+    createBot
+}
