@@ -1,6 +1,8 @@
 const discord = require('discord.js')
 const botCommands = require('./commands')
 
+const has = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
+
 // Config
 const configSchema = {
     defaultColors: {
@@ -23,14 +25,37 @@ const createBot = initialConfig => {
      * Define all the core functions for the bot lifecycle
      */
 
+    bot.loadConfig = function loadConfig(config, callback) {
+        this.log('Loading config...')
+        try {
+            if (!config || !has(config, 'token')) {
+                throw Error('Config or token are missing.')
+            }
+            this.config = {
+                ...configSchema,
+                ...config,
+            }
+            callback()
+        } catch (err) {
+            this.log(`Error loading config: ${err.message}`)
+            this.log('Please fix the config error and retry.')
+        }
+    }
+
     // Load the bot
-    bot.load = function load() {
-        this.log('Loading commands...')
-        Object.keys(botCommands).forEach(key => {
-            this.commands.set(botCommands[key].name, botCommands[key])
+    bot.load = function load(config) {
+        // Set up some properties
+        this.config = {}
+
+        // Load config, load modules, and login
+        this.loadConfig(config, () => {
+            this.log('Loading commands...')
+            Object.keys(botCommands).forEach(key => {
+                this.commands.set(botCommands[key].name, botCommands[key])
+            })
+            this.log('Connecting...')
+            this.client.login(this.config.token)
         })
-        this.log('Connecting...')
-        this.client.login(TOKEN)
     }
 
     // Fired on successful login
@@ -41,11 +66,11 @@ const createBot = initialConfig => {
     // Check and react to messages
     bot.onMessage = async function onMessage(message) {
         // ignore all other messages without our prefix
-        if (!message.content.startsWith(prefix)) return
+        if (!message.content.startsWith(this.config.prefix)) return
 
         const args = message.content.split(/ +/)
         // get the first word (lowercase) and remove the prefix
-        const command = args.shift().toLowerCase().slice(prefix.length)
+        const command = args.shift().toLowerCase().slice(this.config.prefix.length)
 
         if (!this.commands.has(command)) return
 
