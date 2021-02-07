@@ -1,4 +1,14 @@
 {
-  "prefix": "!",
-  "name": "AllBotsEqual"
+  "bots": [
+    {
+      "name": "AllBotsEqual",
+      "token": "TOKEN_ABE",
+      "prefix": "!"
+    },
+    {
+      "name": "Scout",
+      "token": "TOKEN_SCOUT",
+      "prefix": "$"
+    }
+  ]
 }
