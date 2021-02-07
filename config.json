@@ -3,11 +3,13 @@
     {
       "name": "AllBotsEqual",
       "token": "TOKEN_ABE",
+      "tag": "[ABE]",
       "prefix": "!"
     },
     {
       "name": "Scout",
       "token": "TOKEN_SCOUT",
+      "tag": "[SCT]",
       "prefix": "$"
     }
   ]

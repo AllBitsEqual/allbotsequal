@@ -25,15 +25,16 @@ const createBot = initialConfig => {
      * Define all the core functions for the bot lifecycle
      */
 
-    bot.loadConfig = function loadConfig(config, callback) {
-        this.log('Loading config...')
+    bot.loadConfig = function loadConfig(config, tag, callback) {
+        this.log(`${tag} Loading config...`)
         try {
             if (!config || !has(config, 'token')) {
-                throw Error('Config or token are missing.')
+                throw Error(`${tag} Config or token are missing.`)
             }
             this.config = {
                 ...configSchema,
                 ...config,
+                tag,
             }
             callback()
         } catch (err) {
@@ -46,21 +47,24 @@ const createBot = initialConfig => {
     bot.load = function load(config) {
         // Set up some properties
         this.config = {}
+        const tag = config.tag || `[Bot ${config.index}]`
 
         // Load config, load modules, and login
-        this.loadConfig(config, () => {
-            this.log('Loading commands...')
+        this.loadConfig(config, tag, () => {
+            this.log(`${tag} Loading commands...`)
             Object.keys(botCommands).forEach(key => {
                 this.commands.set(botCommands[key].name, botCommands[key])
             })
-            this.log('Connecting...')
+            this.log(`${tag} Connecting...`)
             this.client.login(this.config.token)
         })
     }
 
     // Fired on successful login
     bot.onConnect = async function onConnect() {
-        this.log(`Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`)
+        this.log(
+            `${this.config.tag} Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`,
+        )
     }
 
     // Check and react to messages

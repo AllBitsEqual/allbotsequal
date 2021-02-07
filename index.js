@@ -4,12 +4,12 @@ const BotFactory = require('./src/index')
 
 const { bots } = config
 
-bots.forEach(botConfig => {
-    const { name, token, prefix } = botConfig
+bots.forEach((botConfig, index) => {
+    const { token } = botConfig
     const bot = BotFactory.createBot({
+        ...botConfig,
         token: process.env[token],
-        name,
-        prefix,
+        index,
     })
 
     bot.start()
