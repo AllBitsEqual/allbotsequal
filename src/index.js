@@ -1,7 +1,40 @@
 const discord = require('discord.js')
+const winston = require('winston')
+const chalk = require('chalk')
 const botCommands = require('./commands')
 
 const has = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
+
+// Logger
+const logLevels = {
+    error: 0,
+    warn: 1,
+    info: 2,
+    modules: 3,
+    modwarn: 4,
+    modinfo: 5,
+    debug: 6,
+}
+const logger = winston.createLogger({
+    levels: logLevels,
+    transports: [new winston.transports.Console({ colorize: true, timestamp: true })],
+    format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.padLevels({ levels: logLevels }),
+        winston.format.timestamp(),
+        winston.format.printf(info => `${info.timestamp} ${info.level}:${info.message}`),
+    ),
+    level: 'debug',
+})
+winston.addColors({
+    error: 'red',
+    warn: 'yellow',
+    info: 'green',
+    modules: 'cyan',
+    modwarn: 'yellow',
+    modinfo: 'green',
+    debug: 'blue',
+})
 
 // Config
 const configSchema = {
@@ -17,16 +50,15 @@ const createBot = initialConfig => {
     // Define the bot
     const bot = {
         client: new discord.Client(),
-        log: console.log, // eslint-disable-line no-console
+        log: logger,
         commands: new discord.Collection(),
     }
 
     /*
      * Define all the core functions for the bot lifecycle
      */
-
     bot.loadConfig = function loadConfig(config, tag, callback) {
-        this.log(`${tag} Loading config...`)
+        this.log.info(`${tag} Loading config...`)
         try {
             if (!config || !has(config, 'token')) {
                 throw Error(`${tag} Config or token are missing.`)
@@ -38,8 +70,8 @@ const createBot = initialConfig => {
             }
             callback()
         } catch (err) {
-            this.log(`Error loading config: ${err.message}`)
-            this.log('Please fix the config error and retry.')
+            this.log.error(`Error loading config: ${err.message}`)
+            this.log.error('Please fix the config error and retry.')
         }
     }
 
@@ -51,19 +83,21 @@ const createBot = initialConfig => {
 
         // Load config, load modules, and login
         this.loadConfig(config, tag, () => {
-            this.log(`${tag} Loading commands...`)
+            this.log.info(`${tag} Loading commands...`)
             Object.keys(botCommands).forEach(key => {
                 this.commands.set(botCommands[key].name, botCommands[key])
             })
-            this.log(`${tag} Connecting...`)
+            this.log.info(`${tag} Connecting...`)
             this.client.login(this.config.token)
         })
     }
 
     // Fired on successful login
     bot.onConnect = async function onConnect() {
-        this.log(
-            `${this.config.tag} Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`,
+        this.log.info(
+            chalk.cyan(
+                `${this.config.tag} Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`,
+            ),
         )
     }
 
@@ -81,7 +115,7 @@ const createBot = initialConfig => {
         try {
             this.commands.get(command).execute(message, args, bot)
         } catch (error) {
-            this.log(error)
+            this.log.error(chalk.red(error))
             message.reply('there was an error trying to execute that command!')
         }
     }
@@ -92,13 +126,13 @@ const createBot = initialConfig => {
 
     bot.client.on('ready', bot.onConnect.bind(bot))
     bot.client.on('error', err => {
-        bot.log(`Client error: ${err.message}`)
+        bot.log.error(chalk.red(`Client error: ${err.message}`))
     })
     bot.client.on('reconnecting', () => {
-        bot.log('Reconnecting...')
+        bot.log.info('Reconnecting...')
     })
     bot.client.on('disconnect', evt => {
-        bot.log(`Disconnected: ${evt.reason} (${evt.code})`)
+        bot.log.warn(chalk.yellow(`Disconnected: ${evt.reason} (${evt.code})`))
     })
     bot.client.on('message', bot.onMessage.bind(bot))
 
