@@ -15,17 +15,19 @@ const logLevels = {
     modinfo: 5,
     debug: 6,
 }
-const logger = winston.createLogger({
-    levels: logLevels,
-    transports: [new winston.transports.Console({ colorize: true, timestamp: true })],
-    format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.padLevels({ levels: logLevels }),
-        winston.format.timestamp(),
-        winston.format.printf(info => `${info.timestamp} ${info.level}:${info.message}`),
-    ),
-    level: 'debug',
-})
+const logger = tag =>
+    winston.createLogger({
+        levels: logLevels,
+        transports: [new winston.transports.Console({ colorize: true, timestamp: true })],
+        format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.padLevels({ levels: logLevels }),
+            winston.format.timestamp(),
+            winston.format.printf(info => `${info.timestamp} ${info.level}: ${tag}${info.message}`),
+        ),
+        level: 'debug',
+    })
+
 winston.addColors({
     error: 'red',
     warn: 'yellow',
@@ -50,7 +52,7 @@ const createBot = initialConfig => {
     // Define the bot
     const bot = {
         client: new discord.Client(),
-        log: logger,
+        log: logger(initialConfig.tag || `[Bot ${initialConfig.index}]`),
         commands: new discord.Collection(),
     }
 
@@ -58,10 +60,10 @@ const createBot = initialConfig => {
      * Define all the core functions for the bot lifecycle
      */
     bot.loadConfig = function loadConfig(config, tag, callback) {
-        this.log.info(`${tag} Loading config...`)
+        this.log.info(`Loading config...`)
         try {
             if (!config || !has(config, 'token')) {
-                throw Error(`${tag} Config or token are missing.`)
+                throw Error(`Config or token are missing.`)
             }
             this.config = {
                 ...configSchema,
@@ -83,11 +85,11 @@ const createBot = initialConfig => {
 
         // Load config, load modules, and login
         this.loadConfig(config, tag, () => {
-            this.log.info(`${tag} Loading commands...`)
+            this.log.info(`Loading commands...`)
             Object.keys(botCommands).forEach(key => {
                 this.commands.set(botCommands[key].name, botCommands[key])
             })
-            this.log.info(`${tag} Connecting...`)
+            this.log.info(`Connecting...`)
             this.client.login(this.config.token)
         })
     }
@@ -95,9 +97,7 @@ const createBot = initialConfig => {
     // Fired on successful login
     bot.onConnect = async function onConnect() {
         this.log.info(
-            chalk.cyan(
-                `${this.config.tag} Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`,
-            ),
+            chalk.cyan(`Logged in as: ${this.client.user.tag} (id: ${this.client.user.id})`),
         )
     }
 
