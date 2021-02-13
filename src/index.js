@@ -1,9 +1,16 @@
+const os = require('os')
+const path = require('path')
+const fs = require('fs')
 const discord = require('discord.js')
 const winston = require('winston')
 const chalk = require('chalk')
+const opn = require('opn')
+const mkdirp = require('mkdirp')
+const jsonfile = require('jsonfile')
 const botCommands = require('./commands')
 
 const has = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
+const sanitise = str => str.replace(/[^a-z0-9_-]/gi, '')
 
 // Logger
 const logLevels = {
@@ -40,12 +47,22 @@ winston.addColors({
 
 // Config
 const configSchema = {
+    discordToken: { type: 'string', default: 'Paste your bot token here.' },
+    owner: { type: 'string', default: '' },
+    name: { type: 'string', default: 'BotAnon' },
+    defaultGame: { type: 'string', default: '$help for help' },
+    prefix: { type: 'string', default: '$' },
+    commandAliases: { type: 'object', default: {} },
     defaultColors: {
-        success: '#41b95f',
-        neutral: '#287db4',
-        warning: '#ff7100',
-        error: '#c63737',
+        type: 'object',
+        default: {
+            neutral: { type: 'string', default: '#287db4' },
+            error: { type: 'string', default: '#c63737' },
+            warning: { type: 'string', default: '#ff7100' },
+            success: { type: 'string', default: '#41b95f' },
+        },
     },
+    settings: { type: 'object', default: {} },
 }
 
 const createBot = initialConfig => {

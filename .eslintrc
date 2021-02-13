@@ -21,6 +21,7 @@
       }
     ],
     "semi": ["error", "never"],
+    "no-param-reassign": ["error", { "props": false }],
     "no-plusplus": ["error", {"allowForLoopAfterthoughts": true}],
     "no-shadow": ["error"],
     "no-use-before-define": ["error", {
@@ -28,5 +29,6 @@
       "classes": true,
       "variables": false
     }],
+    "valid-typeof": 0
   }
 }
