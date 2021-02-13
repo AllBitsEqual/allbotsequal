@@ -59,7 +59,7 @@ const createBot = initialConfig => {
     /*
      * Define all the core functions for the bot lifecycle
      */
-    bot.loadConfig = function loadConfig(config, tag, callback) {
+    bot.loadConfig = function loadConfig(config, callback) {
         this.log.info(`Loading config...`)
         try {
             if (!config || !has(config, 'token')) {
@@ -68,7 +68,6 @@ const createBot = initialConfig => {
             this.config = {
                 ...configSchema,
                 ...config,
-                tag,
             }
             callback()
         } catch (err) {
@@ -81,10 +80,9 @@ const createBot = initialConfig => {
     bot.load = function load(config) {
         // Set up some properties
         this.config = {}
-        const tag = config.tag || `[Bot ${config.index}]`
 
         // Load config, load modules, and login
-        this.loadConfig(config, tag, () => {
+        this.loadConfig(config, () => {
             this.log.info(`Loading commands...`)
             Object.keys(botCommands).forEach(key => {
                 this.commands.set(botCommands[key].name, botCommands[key])
