@@ -76,8 +76,122 @@ const createBot = initialConfig => {
     /*
      * Define all the core functions for the bot lifecycle
      */
+
+    // Set the config directory to use
+    bot.setConfigDirectory = function setConfigDirectory(configDir) {
+        this.configDir = configDir
+        this.configFile = path.join(configDir, 'config.json')
+    }
+
+    // Open the config file in a text editor
+    bot.openConfigFile = function openConfigFile() {
+        bot.log.info('Opening config file in a text editor...')
+        opn(this.configFile)
+            .then(() => {
+                bot.log.info('Exiting.')
+                process.exit(0)
+            })
+            .catch(err => {
+                this.log.error('Error opening config file.')
+                throw err
+            })
+    }
+
+    // Set default config directory
+    bot.setConfigDirectory(path.join(os.homedir(), `.discord-${sanitise(initialConfig.name)}-bot`))
+
+    // Recursively iterate over the config to check types and reset properties to default if they are the wrong type
+    bot.configIterator = function configIterator(startPoint, startPointInSchema) {
+        Object.keys(startPointInSchema).forEach(property => {
+            if (!has(startPoint, property)) {
+                if (startPointInSchema[property].type !== 'object') {
+                    startPoint[property] = startPointInSchema[property].default
+                } else {
+                    startPoint[property] = {}
+                }
+            }
+            if (startPointInSchema[property].type === 'object') {
+                configIterator(startPoint[property], startPointInSchema[property].default)
+            }
+            if (
+                !Array.isArray(startPoint[property]) &&
+                typeof startPoint[property] !== startPointInSchema[property].type
+            ) {
+                startPoint[property] = startPointInSchema[property].default
+            }
+        })
+    }
+
     bot.loadConfig = function loadConfig(config, callback) {
+        bot.log.info(`Checking for config file...`)
+        const configExists = fs.existsSync(this.configFile)
+
+        /*
+         *  If file does not exist, create it
+         */
+        if (!configExists) {
+            bot.log.info(`No config file found, generating...`)
+            try {
+                mkdirp.sync(path.dirname(this.configFile))
+                const { token, name, prefix } = initialConfig
+                const baseConfig = {
+                    discordToken: token,
+                    prefix,
+                    name,
+                }
+                fs.writeFileSync(this.configFile, JSON.stringify(baseConfig, null, 4))
+            } catch (err) {
+                this.log.error(chalk.red.bold(`Unable to create config.json: ${err.message}`))
+                throw err
+            }
+        }
+
+        /*
+         * Load the created file, even if it is empty
+         */
         this.log.info(`Loading config...`)
+        try {
+            this.config = JSON.parse(fs.readFileSync(this.configFile))
+        } catch (err) {
+            this.log.error(`Error reading config: ${err.message}`)
+            this.log.error(
+                'Please fix the config error or delete config.json so it can be regenerated.',
+            )
+            throw err
+        }
+
+        /*
+         * iterate over the given config, check all values santise
+         */
+        this.configIterator(this.config, configSchema)
+
+        /*
+         * write the changed/created config file to directory
+         * if config was newly created, open config file for the user
+         */
+        fs.writeFileSync(this.configFile, JSON.stringify(this.config, null, 4))
+        if (!configExists) {
+            this.log.warn('Config file created for the first time.')
+            this.log.warn('Please check the opened new file for completeness!')
+            this.openConfigFile()
+        }
+
+        /*
+         * read the new file and assign it to the bot's config
+         */
+        jsonfile.readFile(this.configFile, (err, obj) => {
+            if (err) {
+                bot.log.error(chalk.red.bold(`Unable to load config.json: ${err.message}`))
+                throw err
+            } else {
+                bot.config = obj
+            }
+        })
+
+        /*
+         * check the config file and look for the token
+         */
+        this.log.info(`Reading config...`)
         try {
             if (!config || !has(config, 'token')) {
                 throw Error(`Config or token are missing.`)
