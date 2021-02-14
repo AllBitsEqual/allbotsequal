@@ -127,7 +127,7 @@ const createBot = initialConfig => {
         const configExists = fs.existsSync(this.configFile)
 
         /*
-         *  If file does not exist, create it
+         *  If the file does not exist, create it
          */
         if (!configExists) {
             bot.log.info(`No config file found, generating...`)
@@ -147,7 +147,7 @@ const createBot = initialConfig => {
         }
 
         /*
-         * Load the created file, even if it is empty
+         * Load the config file from the directory
          */
         this.log.info(`Loading config...`)
         try {
@@ -161,23 +161,19 @@ const createBot = initialConfig => {
         }
 
         /*
-         * iterate over the given config, check all values santise
+         * iterate over the given config, check all values and sanitise
          */
         this.configIterator(this.config, configSchema)
 
         /*
          * write the changed/created config file to the directory
-         * if config was newly created, open the config file for the user
          */
         fs.writeFileSync(this.configFile, JSON.stringify(this.config, null, 4))
-        if (!configExists) {
-            this.log.warn('Config file created for the first time.')
-            this.log.warn('Please check the opened new file for completeness!')
-            this.openConfigFile()
-        }
 
         /*
-         * read the new file and assign it to the bot's config
+         * read the new file from the directory again
+         * - assign it to the bot's config
+         * - execute callback() or abort on error
          */
         jsonfile.readFile(this.configFile, (err, obj) => {
             if (err) {
@@ -185,26 +181,9 @@ const createBot = initialConfig => {
                 throw err
             } else {
                 bot.config = obj
+                callback()
             }
         })
-
-        /*
-         * check the config file and look for the token
-         */
-        this.log.info(`Reading config...`)
-        try {
-            if (!config || !has(config, 'token')) {
-                throw Error(`Config or token are missing.`)
-            }
-            this.config = {
-                ...configSchema,
-                ...config,
-            }
-            callback()
-        } catch (err) {
-            this.log.error(`Error loading config: ${err.message}`)
-            this.log.error('Please fix the config error and retry.')
-        }
     }
 
     // Load the bot
@@ -219,7 +198,7 @@ const createBot = initialConfig => {
                 this.commands.set(botCommands[key].name, botCommands[key])
             })
             this.log.info(`Connecting...`)
-            this.client.login(this.config.token)
+            this.client.login(this.config.discordToken)
         })
     }
 
