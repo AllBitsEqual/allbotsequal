@@ -166,8 +166,8 @@ const createBot = initialConfig => {
         this.configIterator(this.config, configSchema)
 
         /*
-         * write the changed/created config file to directory
-         * if config was newly created, open config file for the user
+         * write the changed/created config file to the directory
+         * if config was newly created, open the config file for the user
          */
         fs.writeFileSync(this.configFile, JSON.stringify(this.config, null, 4))
         if (!configExists) {
